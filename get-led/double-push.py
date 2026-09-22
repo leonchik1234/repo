@@ -35,7 +35,7 @@ while True:
     if current_state_up > 0 and last_state_up == 0 and current_state_down == 0:
         num += 1
         if num > 255:
-            num = 255
+            num = 0
         print(num, dec2bin(num))
         update(num)
         time.sleep(sleep_time)
