@@ -26,7 +26,13 @@ while True:
     current_state_up = GPIO.input(9)
     current_state_down = GPIO.input(10)
 
-    if current_state_up > 0 and last_state_up == 0:
+    if current_state_up > 0 and current_state_down > 0 and (last_state_down == 0 or last_state_up == 0):
+        num = 255
+        print(num, dec2bin(num))
+        update(num)
+        time.sleep(sleep_time)
+
+    if current_state_up > 0 and last_state_up == 0 and current_state_down == 0:
         num += 1
         if num > 255:
             num = 255
@@ -35,7 +41,7 @@ while True:
         time.sleep(sleep_time)
     last_state_up = current_state_up
 
-    if current_state_down > 0 and last_state_down == 0:
+    if current_state_down > 0 and last_state_down == 0 and last_state_up == 0:
         num -= 1
         if num < 0:
             num = 0
