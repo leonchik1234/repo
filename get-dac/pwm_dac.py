@@ -32,12 +32,12 @@ class PWM_DAC:
 
         if self.verbose:
             print(f"Установлено напряжение {voltage:.3f} В"
-                  f"(заполнение {duty_cycle:.1f} %")
+                  f"(заполнение {duty_cycle:.1f} %)")
 
 if __name__ == "__main__":
     dac = None
     try:
-        dac = PWM_DAC(12, 500, 3.17, True)
+        dac = PWM_DAC(12, 500, 3.158, True)
 
         while True:
             try:
@@ -49,4 +49,4 @@ if __name__ == "__main__":
 
     finally:
         if dac is not None:
-            dac.denit()
+            dac.deinit()
