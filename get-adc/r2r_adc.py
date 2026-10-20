@@ -91,8 +91,8 @@ if __name__ == "__main__":
     try:
         while True:
             voltage = adc.get_sar_voltage()
-            print(f"Измеренное напряжение (SAR): {voltage:.3f} В")
-            time.sleep(0.1)
+            print(f"Измеренное напряжение: {voltage:.3f} В")
+            time.sleep(1)
 
     except KeyboardInterrupt:
         print("\nИзмерение остановлено пользователем.")
