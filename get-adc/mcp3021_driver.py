@@ -3,6 +3,8 @@ import time
 
 
 class MCP3021:
+    """Драйвер 10-битного АЦП MCP3021 на шине I2C."""
+
     def __init__(self, dynamic_range, verbose=False):
         self.bus = smbus.SMBus(1)
         self.dynamic_range = dynamic_range
@@ -10,55 +12,56 @@ class MCP3021:
         self.verbose = verbose
 
     def deinit(self):
-        """Освобождает I2C-шину."""
+        """Освобождает шину I2C."""
         self.bus.close()
 
     def get_number(self):
-        """
-        Читает 10-битное число из MCP3021.
-        Используем read_i2c_block_data, чтобы гарантировать порядок байтов:
-        0-й байт — старший, 1-й байт — младший.
-        """
-        # Читаем 2 байта подряд
-        data = self.bus.read_i2c_block_data(self.address, 0, 2)
+        """Читает из MCP3021 10-битное число."""
+        data = self.bus.read_word_data(self.address, 0)
 
-        upper_byte = data[0] # Старшие 8 бит
-        lower_byte = data[1] # Младшие 2 бита + нули
+        # Байт, пришедший по шине вторым (младший по порядку передачи)
+        lower_data_byte = data >> 8
+        # Байт, пришедший по шине первым (старший по порядку передачи)
+        upper_data_byte = data & 0xFF
 
-        # Собираем 10-битное число по даташиту MCP3021:
-        # Старший байт сдвигаем влево на 6, 
-        # младший сдвигаем вправо на 2 (чтобы отбросить нули).
-        number = (upper_byte << 6) | (lower_byte >> 2)
+        # Согласно документации MCP3021:
+        #   D9..D2 — в первом принятом байте (upper)
+        #   D1..D0 — в старших битах второго байта (lower)
+        # Итоговое 10-битное значение:
+        number = (upper_data_byte << 6) | (lower_data_byte >> 2)
 
         if self.verbose:
-            print(f"Байты: {upper_byte:02X} {lower_byte:02X}, "
-                  f"Число: {number}")
+            print(
+                f"Принятые данные: {data}, "
+                f"Старший байт: {upper_data_byte:x}, "
+                f"Младший байт: {lower_data_byte:x}, "
+                f"Число: {number}"
+            )
 
         return number
 
     def get_voltage(self):
-        """
-        Возвращает измеренное напряжение в вольтах.
-        Формула: U = number / 1024 * dynamic_range
-        """
+        """Возвращает измеренное напряжение в Вольтах."""
         number = self.get_number()
-        # Для 10-битного АЦП используем деление на 1024 (2^10)
-        voltage = (number / 1024.0) * self.dynamic_range
+        # 10-битный АЦП: 2**10 = 1024 уровня
+        voltage = number * self.dynamic_range / 1024
         return voltage
 
 
 if __name__ == "__main__":
-    # Обязательно проверь мультиметром напряжение на пине PWR блока AUX (должно быть ~5.0В)
-    adc = MCP3021(dynamic_range=5.0, verbose=True) # Включаем лог для проверки
+    # Динамический диапазон (опорное напряжение) нужно измерить мультиметром
+    # на контакте PWR блока AUX при включённой перемычке на 5V.
+    DYNAMIC_RANGE = 5.0  # заменить на измеренное значение, В
 
+    adc = None
     try:
+        adc = MCP3021(dynamic_range=DYNAMIC_RANGE, verbose=False)
         while True:
             voltage = adc.get_voltage()
-            print(f"Напряжение: {voltage:.3f} В\n")
+            print(f"Напряжение: {voltage:.3f} В")
             time.sleep(1)
-
     except KeyboardInterrupt:
-        print("\nИзмерение остановлено пользователем.")
-
+        print("\nОстановлено пользователем.")
     finally:
-        adc.deinit()
+        if adc is not None:
+            adc.deinit()
