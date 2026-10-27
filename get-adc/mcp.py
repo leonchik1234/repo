@@ -4,7 +4,7 @@ import time
 
 
 # Параметры эксперимента
-duration = 3.0
+duration = 10.0
 dynamic_range = 5.0      # замерить мультиметром на PWR блока AUX (5V)
 
 
